@@ -1,6 +1,6 @@
 ---
 title: "Lab 9 - Multiple Linear Regression"
-author: "ENTER YOUR NAME HERE"
+author: "Madeline Berger"
 output:
   html_document: default
 ---
@@ -31,6 +31,8 @@ Use this template to follow along in Lab Week 9. Each code chunk you'll need is 
 
 # a. Load packages 'tidyverse' and 'stargazer':
 
+library(tidyverse)
+library(stargazer)
 
 
 ```
@@ -41,8 +43,12 @@ Use this template to follow along in Lab Week 9. Each code chunk you'll need is 
 
 # a. Read in data as 'homes':
 
+homes <- read_csv("slo_homes.csv")
 
 # b. Filter to only include cities "San Luis Obispo", "Santa Maria-Orcutt", "Atascadero", and "Arroyo Grande", and call this new subset 'homes_sub':
+
+homes_sub <- homes %>% 
+  filter(City == "San Luis Obispo" | City == "Arroyo Grande" | City == "Atascadero" | City == "Santa Maria-Orcutt")
 
 
 
@@ -72,6 +78,8 @@ by_city <- ggplot(homes_sub, aes(x = Price)) +
   labs(x = "Home Prices (USD)", y = "Density")
 
 by_city
+
+#AG, Atascadero and SLO are pretty similar, whereas Santa Maria has more lower priced houses 
 
 ```
 
@@ -107,8 +115,15 @@ Use summary() to view the model output and statistics.
 
 # a. Saturated model: 
 
+homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = homes_sub) # makes no sense to include PricePerSqFt since you are using a variable to predict your calculated variable -- this leads to biased overfitting of model results
+
+#note the reference variable for this: Arroyo Grande, Forclosure, we can only interpret this with respect to reference level 
+#why are these results so bad: regular sale v foreclosure is negative, same with increasing bedroom
+#WHY? Price p sq foot may be thowring the whole thing, also co-linearity (dn make sense to include multiple variables that exist in the model that are storngly correlated)
 
 # b. Model summary:
+
+summary(homes_lm1)
 
 ```
 
@@ -118,7 +133,13 @@ The next model: Exclude price per square foot, and bedrooms/bathrooms (since the
 
 # a. Updated model with variables City, SqFt, and Status:
 
+homes_lm2 <- lm(Price ~ City + SqFt + Status, data = homes_sub)
+
+homes_lm2
+
 # b. Model summary:
+
+summary(homes_lm2)
 
 ```
 
@@ -128,19 +149,26 @@ Wait...but what if I wanted everything to be with respect to a Regular sale stat
 
 # a. Set Status to class 'factor'
 
+homes_sub$City <- factor(homes_sub$City)
+
 
 # b. Check to ensure it's a factor now
-
+#use class() to check
 
 # c. Check levels:
 
+levels(homes_sub$City)
 
 # d. Reassign reference level of "Status" to "Regular":
+
+homes_sub$Status <- fct_relevel(homes_sub$Status, "Regular")
 
 
 # e. Now run the regression again - same equation, but now the reference level is different (Status = Regular): 
 
+homes_lm3 <- lm(Price ~ City + SqFt + Status, data = homes_sub)
 
+summary(homes_lm3)
 
 ```
 
@@ -156,6 +184,8 @@ Then we can evaluate model diagnostics using the plot() function:
 ```{r diagnostics}
 
 # a. Model diagnostics:
+
+plot(homes_lm3)
 
 ```
 
